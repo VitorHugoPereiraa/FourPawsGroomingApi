@@ -7,7 +7,7 @@ module.exports = {
       if (!id) {
         throw new Error("'id' is an required field");
       }
-      const token = jwt.sign({ id }, JWT_SECRET, { expiresIn: "5s" });
+      const token = jwt.sign({ id }, JWT_SECRET, { expiresIn: "24h" });
       res.json({ token });
     } catch (error) {
       console.log(error);
