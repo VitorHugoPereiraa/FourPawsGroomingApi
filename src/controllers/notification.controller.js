@@ -4,19 +4,18 @@ const expo = new Expo();
 module.exports = {
   sendNotification: async (req, res) => {
     try {
-      const { expoPushToken, body, title } = req.body;
+      const { expoPushToken, body } = req.body;
 
-      if (!expoPushToken || !body || !title)
+      if (!expoPushToken || !body)
         return res.json({ error: "Invalid payload" });
 
-      const expoPushMessage = {
+      const expoPushMessages = {
         to: expoPushToken,
-        title,
         body,
         sound: "default",
         data: { additionalData: "optional" },
       };
-      const chunks = expo.chunkPushNotifications([expoPushMessage]);
+      const chunks = expo.chunkPushNotifications([expoPushMessages]);
       const tickets = [];
       const sendPushNotifications = async () => {
         for (const chunk of chunks) {
@@ -28,29 +27,23 @@ module.exports = {
           }
         }
       };
-      const getReceipts = async () => {
-        const receiptIds = tickets.map((ticket) => ticket.id);
-        const receipt = await expo.getPushNotificationReceiptsAsync(receiptIds);
-        if (Object.keys(receipt).length === 0) {
-          console.error(`There was an error sending the notification`);
 
-          return res.json({
-            error: "There was an error sending the notification",
-          });
-        } else {
+      await sendPushNotifications();
+      for (const ticket of tickets) {
+        if (ticket.status === "ok") {
           return res.json({
             message: "Success",
             data: {
-              ticket: receiptIds[0],
+              ticket: tickets[0],
               sent_at: new Date().toISOString(),
-              expoPushMessage,
             },
           });
-        }
-      };
+        } else if (ticket.status === "error") {
+          console.error(`There was an error sending a notification`);
 
-      await sendPushNotifications();
-      await getReceipts();
+          return res.json({ error: ticket.details });
+        }
+      }
     } catch (error) {
       console.log(error);
       res.json({ error: error });
