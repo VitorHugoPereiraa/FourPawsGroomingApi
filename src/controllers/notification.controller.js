@@ -41,7 +41,7 @@ module.exports = {
         } else if (ticket.status === "error") {
           console.error(`There was an error sending a notification`);
 
-          return res.json({ error: ticket.details });
+          return res.stats(400).json({ error: ticket.details });
         }
       }
     } catch (error) {
